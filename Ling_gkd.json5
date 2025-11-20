@@ -1,110 +1,93 @@
 {
-  id: "com.chaozh.iReader.dj",
-  name: "掌阅 iReader（TXT 阅读器版）",
+  id: 'com.chaozh.iReader.dj',
+  name: '得间免费小说',
   groups: [
     {
       key: 1,
-      name: "底部横幅广告 - 自动关闭",
+      name: '底部横幅广告-自动关闭（强对抗版）',
+      desc: '自动关闭底部横幅广告，多策略匹配',
       activityIds: [
-        "com.zhangyue.iReader.read.ui.Activity_BookBrowser_TXT",
-        "com.chaozh.iReader.dj/com.zhangyue.iReader.read.ui.Activity_BookBrowser_TXT"
+        'com.zhangyue.iReader.read.ui.Activity_BookBrowser_TXT'
       ],
       rules: [
+        // === 第一层：精确 id ===
         {
-          // 第一优先：官方 close 按钮 id
-          matches: '[id$="/ad_close_2"],[id$="/ad_close"],[id$="/close_ad"],[id$="/close"]',
-          action: "click",
-          delay: 300,
-          snapshotUrls: []
+          matches: '[id="com.zhangyue.module.ad:id/ad_close_2"]',
+          snapshotUrls: 'https://i.gkd.li/i/1763596322425'
         },
         {
-          // 兜底：底部广告容器高度固定，内部包含“广告”字样
-          matches: '@[text*="告"] < *[height<200][width>300]',
-          action: "click",
-          delay: 400
+          matches: '[id="com.zhangyue.module.ad:id/close"]',
+          snapshotUrls: 'https://i.gkd.li/i/1763596343796'
+        },
+
+        // === 第二层：后缀匹配 ===
+        {
+          matches: '[id$="close"]',
+          snapshotUrls: 'https://i.gkd.li/i/1763596322425'
+        },
+
+        // === 第三层：明确 banner 容器内的关闭按钮 ===
+        {
+          matches: '[id="com.zhangyue.module.ad:id/read_banner_ad_view"] [id*="close"]',
+          snapshotUrls: 'https://i.gkd.li/i/1763596322425'
         },
         {
-          // 文本被混淆、拆字，例如 “广 告”“告⺁”“广𠆢告”
-          // 采用正则识别逻辑（GKD 内 fts 支持）
-          matches: '[text~=".*([广广⺁𠆢]|告).*"] < *[height<220]',
-          action: "click",
-          delay: 500
+          matches: '[id="com.zhangyue.module.ad:id/read_end_contain"] [id*="close"]',
+          snapshotUrls: 'https://i.gkd.li/i/1763596322425'
         }
       ]
     },
 
     {
       key: 2,
-      name: "激励视频广告 / 看视频免广告弹层",
+      name: '章节间全屏广告',
+      desc: '自动关闭章节间全屏广告',
       activityIds: [
-        "com.zhangyue.iReader.read.ui.Activity_BookBrowser_TXT"
+        'com.zhangyue.iReader.read.ui.Activity_BookBrowser_TXT'
       ],
       rules: [
         {
-          // “看视频免广告” 按钮出现时自动点击关闭按钮
-          matches: '[text*="免广告"],[text$="广告"],[text*="视频"] + * > [id$="/close"]',
-          action: "click",
-          delay: 350
+          matches: '[id="com.zhangyue.module.ad:id/close"]',
+          snapshotUrls: 'https://i.gkd.li/i/1763596343796'
         },
         {
-          // 兜底：激励视频卡片通常有 open_video
-          matches: '[id$="/open_video"] < * > [id$="/close"]',
-          action: "click"
-        },
-        {
-          // 防混淆处理：即使文字全变 icon，也关闭其父级容器
-          matches: '[id$="multi_area_top_tip"] << * > [id$="/close"]',
-          action: "click",
-          delay: 450
+          matches: '[id$="close"]',
+          snapshotUrls: 'https://i.gkd.li/i/1763596343796'
         }
       ]
     },
 
     {
       key: 3,
-      name: "推广类卡片广告（助力深度阅读 / 助力正版内容）",
+      name: '智能推荐弹窗',
+      desc: '自动点击"以后再说"关闭书籍推荐弹窗',
       activityIds: [
-        "com.zhangyue.iReader.read.ui.Activity_BookBrowser_TXT"
+        'com.zhangyue.iReader.read.ui.Activity_BookBrowser_TXT'
       ],
       rules: [
         {
-          // 精准文本匹配
-          matches: '[text*="助力"],[text*="正版"],[text*="深度阅读"] >> [id$="/close"]',
-          action: "click"
-        },
-        {
-          // 容器兜底结构：推广卡片一般位于底部广告同级，具有 padding 和 clickable
-          matches: '*[clickable=true][height>160] > * > [text*="阅读"]',
-          action: "click",
-          delay: 350
+          matches: '[text="以后再说"]',
+          snapshotUrls: 'https://i.gkd.li/i/1763596063712'
         }
       ]
     },
 
     {
       key: 4,
-      name: "反混淆与未来适配兜底策略",
+      name: '推广卡片广告',
+      desc: '自动关闭推广卡片广告',
       activityIds: [
-        "com.zhangyue.iReader.read.ui.Activity_BookBrowser_TXT"
+        'com.zhangyue.iReader.read.ui.Activity_BookBrowser_TXT'
       ],
       rules: [
+        // 基于文本内容识别推广卡片，然后找关闭按钮
         {
-          // UI 树中所有含 “close” 节点，但不能是顶部返回按钮（排除 back / 返回）
-          matches: '[id*="close"][clickable=true]:not([id*="back"]):not([text="返回"])',
-          action: "click",
-          delay: 260
+          matches: '[text*="广告助力正版内容"] < * > [id*="close"]',
+          snapshotUrls: 'https://i.gkd.li/i/1763596343796'
         },
         {
-          // 如果广告覆盖屏幕底部（常见策略：sticky bottom）
-          matches: '*[height<320][y>1000][clickable=true] > [text*="广告"]',
-          action: "click",
-          delay: 300
-        },
-        {
-          // 屏蔽未来可能出现的“悬浮广告球”
-          matches: '[id*="float"][text*="广"]',
-          action: "click",
-          delay: 400
+          matches: '[text*="免广告"] < * > [id*="close"]',
+          snapshotUrls: 'https://i.gkd.li/i/1763596343796'
         }
       ]
     }
